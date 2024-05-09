@@ -1,33 +1,72 @@
-<div>
-    <button>Add</button>
-</div>
-<kendo-grid class="zipperPlanGrid" [data]="zipperPlans">
-    <kendo-grid-column field="roleDropdownConfigKey" title="Role" [headerClass]="'column-headers'" [width]="110">
-        <ng-template kendoGridCellTemplate let-dataItem>
-            {{ role(dataItem.value)?.display }}
-        </ng-template>
-        <ng-template kendoGridEditTemplate let-formGroup="formGroup">
-            <kendo-dropdownlist [data]="roles" textField="display" valueField="value" [valuePrimitive]="true"
-                [formControl]="formGroup.get('roleDropdownConfigKey')">
-            </kendo-dropdownlist>
-        </ng-template>
-    </kendo-grid-column>
-    <kendo-grid-column field="disciplineDropdownConfigKey" title="Discipline" [headerClass]="'column-headers'"
-        [width]="110"></kendo-grid-column>
-    <kendo-grid-column field="zipperLevelDropdownConfigKey" title="Zipper Level" [headerClass]="'column-headers'"
-        [width]="110"></kendo-grid-column>
-    <kendo-grid-column field="districtKey" title="District" [headerClass]="'column-headers'"
-        [width]="90"></kendo-grid-column>
-    <kendo-grid-column field="pernr" title="PERNR" [headerClass]="'column-headers'" [width]="90"></kendo-grid-column>
-    <kendo-grid-column field="name" title="Name" [headerClass]="'column-headers'" [width]="90"></kendo-grid-column>
-    <kendo-grid-column field="phoneNumber" title="Phone Number" [headerClass]="'column-headers'"
-        [width]="120"></kendo-grid-column>
-    <kendo-grid-column field="email" title="Email" [headerClass]="'column-headers'" [width]="120"></kendo-grid-column>
-    <kendo-grid-column title="Delete" [headerClass]="'column-headers'" [width]="55">
-        <ng-template kendoGridCellTemplate let-isNew="isNew">
-            <button>
-                <kendo-icon name="trash"></kendo-icon>
-            </button>
-        </ng-template>
-    </kendo-grid-column>
+<button (click)="addHandler()">Add</button>
+<kendo-grid class="zipperPlanGrid" [kendoGridBinding]="this.zipperPlanService.data"
+	(cellClick)="cellClickHandler($event)" (cellClose)="cellCloseHandler($event)" (remove)="removeHandler($event)">
+	<kendo-grid-column field="roleDropdownConfigKey" title="Role" [headerClass]="'column-headers'" [width]="110">
+		<ng-template kendoGridCellTemplate let-dataItem>
+			{{ role(dataItem.roleDropdownConfigKey)?.display }}
+		</ng-template>
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="roles" textField="display" valueField="value"
+				[valuePrimitive]="true" [formControl]="formGroup.get('roleDropdownConfigKey')">
+			</kendo-dropdownlist>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-column field="disciplineDropdownConfigKey" title="Discipline" [headerClass]="'column-headers'"
+		[width]="110">
+		<ng-template kendoGridCellTemplate let-dataItem>
+			{{ discipline(dataItem.disciplineDropdownConfigKey)?.display }}
+		</ng-template>
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="disciplines" textField="display"
+				valueField="value" [valuePrimitive]="true" [formControl]="formGroup.get('disciplineDropdownConfigKey')">
+			</kendo-dropdownlist>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-column field="zipperLevelDropdownConfigKey" title="Zipper Level" [headerClass]="'column-headers'"
+		[width]="110">
+		<ng-template kendoGridCellTemplate let-dataItem>
+			{{ zipperLevel(dataItem.zipperLevelDropdownConfigKey)?.display }}
+		</ng-template>
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="zipperLevels" textField="display"
+				valueField="value" [valuePrimitive]="true" [formControl]="formGroup.get('zipperLevelDropdownConfigKey')">
+			</kendo-dropdownlist>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-column field="districtKey" title="District" [headerClass]="'column-headers'" [width]="90">
+		<ng-template kendoGridCellTemplate let-dataItem>
+			{{ district(dataItem.districtKey)?.display }}
+		</ng-template>
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="districts" textField="display" valueField="value"
+				[valuePrimitive]="true" [formControl]="formGroup.get('districtKey')">
+			</kendo-dropdownlist>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-column field="pernr" title="PERNR" [headerClass]="'column-headers'" [width]="90">
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-textbox [disabled]="!isDisabled" [formControl]="formGroup.get('pernr')"></kendo-textbox>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-column field="name" title="Name" [headerClass]="'column-headers'" [width]="90">
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-textbox [disabled]="isDisabled" [formControl]="formGroup.get('name')"></kendo-textbox>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-column field="phoneNumber" title="Phone Number" [headerClass]="'column-headers'" [width]="120">
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-textbox [disabled]="isDisabled" [formControl]="formGroup.get('phoneNumber')"></kendo-textbox>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-column field="email" title="Email" [headerClass]="'column-headers'" [width]="120">
+		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
+			<kendo-textbox [disabled]="isDisabled" [formControl]="formGroup.get('email')"></kendo-textbox>
+		</ng-template>
+	</kendo-grid-column>
+	<kendo-grid-command-column title="Delete" [headerClass]="'column-headers'" [width]="55">
+		<ng-template kendoGridCellTemplate>
+			<button kendoGridRemoveCommand>Delete</button>
+		</ng-template>
+	</kendo-grid-command-column>
 </kendo-grid>
+<button (click)="saveChanges()">Save</button>
