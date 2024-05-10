@@ -2,7 +2,7 @@ import { IZipperPlan } from 'src/interfaces/IZipperPlan';
 
 export const mockGetZipperPlansResponse: IZipperPlan[] = [
   {
-    resourcePlanContactId: 1,
+    resourcePlanContactKey: 1,
     roleDropdownConfigKey: 1,
     disciplineDropdownConfigKey: 1,
     zipperLevelDropdownConfigKey: 1,
@@ -11,7 +11,7 @@ export const mockGetZipperPlansResponse: IZipperPlan[] = [
     name: 'John Doe',
   },
   {
-    resourcePlanContactId: 2,
+    resourcePlanContactKey: 2,
     roleDropdownConfigKey: 2,
     disciplineDropdownConfigKey: 2,
     zipperLevelDropdownConfigKey: 2,
@@ -20,7 +20,7 @@ export const mockGetZipperPlansResponse: IZipperPlan[] = [
     name: 'Jane Doe',
   },
   {
-    resourcePlanContactId: 3,
+    resourcePlanContactKey: 3,
     roleDropdownConfigKey: 3,
     disciplineDropdownConfigKey: 3,
     zipperLevelDropdownConfigKey: 3,

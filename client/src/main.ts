@@ -6,14 +6,15 @@ import { environment } from './environments/environment';
 
 async function prepareApp() {
   if (isDevMode()) {
-    const { worker } = await import('./mocks/browser');
-    return worker.start({ onUnhandledRequest: 'bypass' });
+    // const { worker } = await import('./mocks/browser');
+    // return worker.start({ onUnhandledRequest: 'bypass' });
   }
 
   return Promise.resolve();
 }
 
 prepareApp().then(() => {
-  platformBrowserDynamic().bootstrapModule(AppModule)
-    .catch(err => console.error(err));
+  platformBrowserDynamic()
+    .bootstrapModule(AppModule)
+    .catch((err) => console.error(err));
 });

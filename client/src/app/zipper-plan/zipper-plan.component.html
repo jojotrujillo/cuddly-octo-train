@@ -1,13 +1,14 @@
 <button (click)="addHandler()">Add</button>
-<kendo-grid class="zipperPlanGrid" [kendoGridBinding]="this.zipperPlanService.data"
-	(cellClick)="cellClickHandler($event)" (cellClose)="cellCloseHandler($event)" (remove)="removeHandler($event)">
+<kendo-grid (cellClick)="cellClickHandler($event)" class="zipperPlanGrid" [data]="this.zipperPlanService.data"
+	id="zipperPlanGrid" (remove)="removeHandler($event)">
 	<kendo-grid-column field="roleDropdownConfigKey" title="Role" [headerClass]="'column-headers'" [width]="110">
 		<ng-template kendoGridCellTemplate let-dataItem>
 			{{ role(dataItem.roleDropdownConfigKey)?.display }}
 		</ng-template>
 		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
 			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="roles" textField="display" valueField="value"
-				[valuePrimitive]="true" [formControl]="formGroup.get('roleDropdownConfigKey')">
+				[valuePrimitive]="true" [formControl]="formGroup.get('roleDropdownConfigKey')"
+				(valueChange)="onRoleValueChange($event)">
 			</kendo-dropdownlist>
 		</ng-template>
 	</kendo-grid-column>
@@ -45,7 +46,8 @@
 	</kendo-grid-column>
 	<kendo-grid-column field="pernr" title="PERNR" [headerClass]="'column-headers'" [width]="90">
 		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
-			<kendo-textbox [disabled]="!isDisabled" [formControl]="formGroup.get('pernr')"></kendo-textbox>
+			<kendo-textbox (blur)="onPernrTextboxBlur()" [disabled]="!isDisabled"
+				[formControl]="formGroup.get('pernr')"></kendo-textbox>
 		</ng-template>
 	</kendo-grid-column>
 	<kendo-grid-column field="name" title="Name" [headerClass]="'column-headers'" [width]="90">

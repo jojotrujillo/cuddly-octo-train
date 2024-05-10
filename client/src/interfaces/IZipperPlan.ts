@@ -1,5 +1,5 @@
 export interface IZipperPlan {
-  resourcePlanContactId?: number; // Resource Plan Contact, aka Zipper Plan
+  resourcePlanContactKey?: number; // Resource Plan Contact, aka Zipper Plan
   roleDropdownConfigKey: number;
   disciplineDropdownConfigKey: number;
   zipperLevelDropdownConfigKey: number;

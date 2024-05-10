@@ -6,7 +6,7 @@ import { IZipperPlan } from 'src/interfaces/IZipperPlan';
 
 const itemIndex = (item: IZipperPlan, data: IZipperPlan[]): number => {
   for (let idx = 0; idx < data.length; idx++) {
-    if (data[idx].resourcePlanContactId === item.resourcePlanContactId) {
+    if (data[idx].resourcePlanContactKey === item.resourcePlanContactKey) {
       return idx;
     }
   }
@@ -20,6 +20,7 @@ const cloneData = (data: IZipperPlan[]) =>
 @Injectable({ providedIn: 'root' })
 export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
   public data: IZipperPlan[] = [];
+  private counter: number = this.data.length;
   private originalData: IZipperPlan[] = [];
   private createdItems: IZipperPlan[] = [];
   private updatedItems: IZipperPlan[] = [];
@@ -33,13 +34,13 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
     pernr: string
   ): Observable<IActiveDirectoryUserClientContract> {
     return this.http.get<IActiveDirectoryUserClientContract>(
-      `http://localhost:42069/api/Users/GetUser/${pernr}`
+      `http://localhost:3000/api/Users/GetUser/${pernr}`
     );
   }
 
   private getZipperPlans(resourcePlanKey: number): Observable<IZipperPlan[]> {
     return this.http.get<IZipperPlan[]>(
-      `http://localhost:42069/api/ResourcePlans/${resourcePlanKey}/Contacts`
+      `http://localhost:3000/api/ResourcePlans/${resourcePlanKey}/Contacts`
     );
   }
 
@@ -81,6 +82,21 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
     }
 
     super.next(this.data);
+  }
+
+  public save(item: IZipperPlan, isNew: boolean): void {
+    if (isNew) {
+      item.resourcePlanContactKey = this.counter++;
+      this.data.splice(0, 0, item);
+    } else {
+      Object.assign(
+        this.data.find(
+          ({ resourcePlanContactKey }) =>
+            resourcePlanContactKey === item.resourcePlanContactKey
+        )!,
+        item
+      );
+    }
   }
 
   public saveChanges(): void {
