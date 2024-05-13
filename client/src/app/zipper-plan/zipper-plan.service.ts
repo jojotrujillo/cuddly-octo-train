@@ -3,6 +3,11 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { IActiveDirectoryUserClientContract } from '../../interfaces/IActiveDirectoryUserClientContract';
 import { IZipperPlan } from 'src/interfaces/IZipperPlan';
+import { IDropdownConfig } from 'src/interfaces/IDropdownConfig';
+import { IDropdownConfigItem } from 'src/interfaces/IDropdownConfigItem';
+
+const cloneData = (data: IZipperPlan[]): IZipperPlan[] =>
+  data.map((item) => Object.assign({}, item));
 
 const itemIndex = (item: IZipperPlan, data: IZipperPlan[]): number => {
   for (let idx = 0; idx < data.length; idx++) {
@@ -14,13 +19,10 @@ const itemIndex = (item: IZipperPlan, data: IZipperPlan[]): number => {
   return -1;
 };
 
-const cloneData = (data: IZipperPlan[]) =>
-  data.map((item) => Object.assign({}, item));
-
 @Injectable({ providedIn: 'root' })
 export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
   public data: IZipperPlan[] = [];
-  private counter: number = this.data.length;
+  private counter: number;
   private originalData: IZipperPlan[] = [];
   private createdItems: IZipperPlan[] = [];
   private updatedItems: IZipperPlan[] = [];
@@ -30,17 +32,53 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
     super([]);
   }
 
+  public getDropdownConfigs(): Observable<IDropdownConfig[]> {
+    return this.http.get<IDropdownConfig[]>(
+      'http://localhost:3000/api/DropdownConfigs'
+    );
+  }
+
+  public getLatestUserInformation(data: IZipperPlan[], roles: IDropdownConfigItem[]) {
+    data.forEach((item: IZipperPlan) => {
+      const role = roles.find((role: IDropdownConfigItem) => item.roleDropdownConfigKey === role.value)!;
+
+      if (
+        item.pernr &&
+        !role.display.toLowerCase().includes('external')
+      ) {
+        this.getUserByPernr(item.pernr).subscribe({
+          next: (user: IActiveDirectoryUserClientContract) => {
+            if (item.name !== user.firstName + ' ' + user.lastName) {
+              item.name = user.firstName + ' ' + user.lastName;
+            }
+
+            if (
+              item.phoneNumber !== user.businessPhone &&
+              item.phoneNumber !== user.mobilePhone &&
+              (user.businessPhone || user.mobilePhone)
+            ) {
+              item.phoneNumber = user.businessPhone || user.mobilePhone;
+            }
+
+            if (item.email !== user.email2) {
+              item.email = user.email2;
+            }
+          },
+          error: () => {
+            item.name = '';
+            item.phoneNumber = '';
+            item.email = '';
+          }
+        })
+      }
+    });
+  }
+
   public getUserByPernr(
     pernr: string
   ): Observable<IActiveDirectoryUserClientContract> {
     return this.http.get<IActiveDirectoryUserClientContract>(
       `http://localhost:3000/api/Users/GetUser/${pernr}`
-    );
-  }
-
-  private getZipperPlans(resourcePlanKey: number): Observable<IZipperPlan[]> {
-    return this.http.get<IZipperPlan[]>(
-      `http://localhost:3000/api/ResourcePlans/${resourcePlanKey}/Contacts`
     );
   }
 
@@ -53,7 +91,7 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
     super.next(this.data);
   }
 
-  public read(): void {
+  public read(roles: IDropdownConfigItem[]): void {
     if (this.data.length) {
       return super.next(this.data);
     }
@@ -61,7 +99,10 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
     this.getZipperPlans(1).subscribe((data) => {
       this.data = data;
       this.originalData = cloneData(data);
+      this.counter = data.length;
       super.next(data);
+
+      this.getLatestUserInformation(data, roles);
     });
   }
 
@@ -86,7 +127,7 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
 
   public save(item: IZipperPlan, isNew: boolean): void {
     if (isNew) {
-      item.resourcePlanContactKey = this.counter++;
+      item.resourcePlanContactKey = ++this.counter;
       this.data.splice(0, 0, item);
     } else {
       Object.assign(
@@ -154,11 +195,19 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
 
   // #endregion
 
+  // #region Private methods
+
+  private getZipperPlans(resourcePlanKey: number): Observable<IZipperPlan[]> {
+    return this.http.get<IZipperPlan[]>(
+      `http://localhost:3000/api/ResourcePlans/${resourcePlanKey}/Contacts`
+    );
+  }
+
   private hasChanges(): boolean {
     return Boolean(
       this.deletedItems.length ||
-        this.updatedItems.length ||
-        this.createdItems.length
+      this.updatedItems.length ||
+      this.createdItems.length
     );
   }
 
@@ -168,4 +217,6 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
     this.updatedItems = [];
     this.createdItems = [];
   }
+
+  // #endregion
 }

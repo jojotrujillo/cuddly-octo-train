@@ -1,4 +1,4 @@
-export interface IComboBoxItem {
+export interface IDropdownConfigItem {
     display: string;
     value: number;
     hidden?: boolean;

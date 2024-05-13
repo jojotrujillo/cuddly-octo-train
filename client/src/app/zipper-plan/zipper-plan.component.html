@@ -6,8 +6,8 @@
 			{{ role(dataItem.roleDropdownConfigKey)?.display }}
 		</ng-template>
 		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
-			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="roles" textField="display" valueField="value"
-				[valuePrimitive]="true" [formControl]="formGroup.get('roleDropdownConfigKey')"
+			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="roles" textField="display"
+				valueField="value" [valuePrimitive]="true" [formControl]="formGroup.get('roleDropdownConfigKey')"
 				(valueChange)="onRoleValueChange($event)">
 			</kendo-dropdownlist>
 		</ng-template>
@@ -30,7 +30,8 @@
 		</ng-template>
 		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
 			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="zipperLevels" textField="display"
-				valueField="value" [valuePrimitive]="true" [formControl]="formGroup.get('zipperLevelDropdownConfigKey')">
+				valueField="value" [valuePrimitive]="true"
+				[formControl]="formGroup.get('zipperLevelDropdownConfigKey')">
 			</kendo-dropdownlist>
 		</ng-template>
 	</kendo-grid-column>
@@ -39,8 +40,8 @@
 			{{ district(dataItem.districtKey)?.display }}
 		</ng-template>
 		<ng-template kendoGridEditTemplate let-formGroup="formGroup">
-			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="districts" textField="display" valueField="value"
-				[valuePrimitive]="true" [formControl]="formGroup.get('districtKey')">
+			<kendo-dropdownlist [defaultItem]="defaultDropdownValue" [data]="districts" textField="display"
+				valueField="value" [valuePrimitive]="true" [formControl]="formGroup.get('districtKey')">
 			</kendo-dropdownlist>
 		</ng-template>
 	</kendo-grid-column>

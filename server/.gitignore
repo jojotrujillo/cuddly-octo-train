@@ -22,7 +22,7 @@ yarn-error.log
 
 # Miscellaneous
 ZipperPlans.db
-sqlite.exe
+*.exe
 
 # System files
 .DS_Store

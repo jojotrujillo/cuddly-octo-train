@@ -14,6 +14,30 @@ const db = new sqlite3.Database('./ZipperPlans.db', (err) => {
 
 app.use(cors());
 
+// Get dropdown configs
+app.get('/api/DropdownConfigs', (req, res) => {
+	db.all('SELECT * FROM DropdownConfigs', (err, rows) => {
+		if (err) {
+			console.error(err.message);
+			res.status(500).send('Internal server error');
+		} else {
+			// JSON should look like this
+			// { "Roles": [{ "blah": "blah" }] }
+			const json = {};
+			rows.forEach(row => {
+				const key = row.Key;
+				const value = row.Value;
+				if (!json[key]) {
+					json[key] = [];
+				}
+				json[key].push(value);
+			});
+
+			res.send(json);
+		}
+	});
+});
+
 // Get a single Activer Directory user by pernr
 app.get('/api/Users/GetUser/:pernr', (req, res) => {
 	const { pernr } = req.params;

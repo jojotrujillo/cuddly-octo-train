@@ -8,7 +8,8 @@ import {
 } from '@angular/core';
 import { ZipperPlanService } from './zipper-plan.service';
 import { IZipperPlan } from 'src/interfaces/IZipperPlan';
-import { IComboBoxItem } from 'src/interfaces/IComboBoxItem';
+import { IDropdownConfig } from 'src/interfaces/IDropdownConfig';
+import { IDropdownConfigItem } from 'src/interfaces/IDropdownConfigItem';
 import { FormControl, FormGroup } from '@angular/forms';
 import {
   CellClickEvent,
@@ -30,71 +31,11 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   private grid: GridComponent; // Note: This has to be instantiated before formGroup or else formGroup will take on GridComponent type
 
   public formGroup: FormGroup | undefined;
-  public roles: IComboBoxItem[] = [
-    {
-      display: 'Role 1',
-      value: 1,
-    },
-    {
-      display: 'Role 2',
-      value: 2,
-    },
-    {
-      display: 'Role 3',
-      value: 3,
-    },
-    {
-      display: 'External - Role 4',
-      value: 4,
-    },
-    {
-      display: 'External - Role 5',
-      value: 5,
-    },
-  ];
-  public disciplines: IComboBoxItem[] = [
-    {
-      display: 'Discipline 1',
-      value: 1,
-    },
-    {
-      display: 'Discipline 2',
-      value: 2,
-    },
-    {
-      display: 'Discipline 3',
-      value: 3,
-    },
-  ];
-  public zipperLevels: IComboBoxItem[] = [
-    {
-      display: 'Zipper Level 1',
-      value: 1,
-    },
-    {
-      display: 'Zipper Level 2',
-      value: 2,
-    },
-    {
-      display: 'Zipper Level 3',
-      value: 3,
-    },
-  ];
-  public districts: IComboBoxItem[] = [
-    {
-      display: 'District 1',
-      value: 1,
-    },
-    {
-      display: 'District 2',
-      value: 2,
-    },
-    {
-      display: 'District 3',
-      value: 3,
-    },
-  ];
-  public defaultDropdownValue: IComboBoxItem = {
+  public roles: IDropdownConfigItem[];
+  public disciplines: IDropdownConfigItem[];
+  public zipperLevels: IDropdownConfigItem[];
+  public districts: IDropdownConfigItem[];
+  public defaultDropdownValue: IDropdownConfigItem = {
     display: 'PLEASE SELECT',
     value: -1,
   };
@@ -104,12 +45,11 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   private editedRowIndex: number | undefined;
   private firstRowIndex: number = 0;
   private isNew: boolean;
-  private tempResourcePlanContactKey: number = 0;
 
   constructor(
     private renderer: Renderer2,
     public zipperPlanService: ZipperPlanService
-  ) {}
+  ) { }
 
   // #region Lifecycle hooks
 
@@ -118,25 +58,31 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit(): void {
-    this.zipperPlanService.read();
-
     this.docClickSubscription.add(
       this.renderer.listen('document', 'click', this.onDocumentClick.bind(this))
     );
+
+    this.zipperPlanService.getDropdownConfigs().subscribe({
+      next: (data: IDropdownConfig[]) => {
+        this.roles = data.find((x) => x.categoryName === 'Role')?.dropdownItems ?? [];
+        this.disciplines = data.find((x) => x.categoryName === 'Discipline')?.dropdownItems ?? [];
+        this.zipperLevels = data.find((x) => x.categoryName === 'ZipperLevel')?.dropdownItems ?? [];
+        this.districts = data.find((x) => x.categoryName === 'District')?.dropdownItems ?? [];
+
+        this.zipperPlanService.read(this.roles);
+      },
+    });
+
   }
 
   // #endregion
 
   public addHandler(): void {
-    this.addZipperPlanRow();
+    // this.addZipperPlanRow();
 
-    // if (this.grid !== undefined) this.closeEditor(this.grid);
-
-    this.tempResourcePlanContactKey =
-      this.findHighestResourcePlanContactKey() + 1;
+    this.closeEditor();
 
     this.formGroup = this.createFormGroup({
-      resourcePlanContactKey: this.tempResourcePlanContactKey,
       roleDropdownConfigKey: 0,
       disciplineDropdownConfigKey: 0,
       zipperLevelDropdownConfigKey: 0,
@@ -147,9 +93,10 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
       email: undefined,
       isNew: true,
     });
+    this.isNew = true;
 
-    this.addZipperPlanRow();
-    // if (this.grid !== undefined) this.closeEditor(this.grid);
+    // this.addZipperPlanRow();
+    this.grid.addRow(this.formGroup);
   }
 
   public cellClickHandler(args: CellClickEvent): void {
@@ -218,8 +165,8 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
               user.businessPhone
                 ? user.businessPhone
                 : user.mobilePhone
-                ? user.mobilePhone
-                : '',
+                  ? user.mobilePhone
+                  : '',
               user.email2
             );
           },
@@ -245,8 +192,8 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   }
 
   public onRoleValueChange(newValue: number): void {
-    const roleDropdownConfig: IComboBoxItem = this.roles.find(
-      (role: IComboBoxItem) => role.value === newValue
+    const roleDropdownConfig: IDropdownConfigItem = this.roles.find(
+      (role: IDropdownConfigItem) => role.value === newValue
     ) ?? {
       value: 0,
       display: '',
@@ -280,19 +227,19 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
 
   // #region Display text parsers for dropdowns
 
-  public discipline(dropdownConfigKey: number): IComboBoxItem | undefined {
+  public discipline(dropdownConfigKey: number): IDropdownConfigItem | undefined {
     return this.disciplines.find((x) => x.value === dropdownConfigKey);
   }
 
-  public district(dropdownConfigKey: number): IComboBoxItem | undefined {
+  public district(dropdownConfigKey: number): IDropdownConfigItem | undefined {
     return this.districts.find((x) => x.value === dropdownConfigKey);
   }
 
-  public role(dropdownConfigKey: number): IComboBoxItem | undefined {
+  public role(dropdownConfigKey: number): IDropdownConfigItem | undefined {
     return this.roles.find((x) => x.value === dropdownConfigKey);
   }
 
-  public zipperLevel(dropdownConfigKey: number): IComboBoxItem | undefined {
+  public zipperLevel(dropdownConfigKey: number): IDropdownConfigItem | undefined {
     return this.zipperLevels.find((x) => x.value === dropdownConfigKey);
   }
 
@@ -325,27 +272,13 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
     this.formGroup = undefined;
   }
 
-  private findHighestResourcePlanContactKey(): number {
-    const zipperPlans = this.zipperPlanService.data;
-    let highestResourcePlanContactKey = 0;
-    zipperPlans.forEach((zipperPlan) => {
-      if (
-        zipperPlan.resourcePlanContactKey &&
-        zipperPlan.resourcePlanContactKey > highestResourcePlanContactKey
-      ) {
-        highestResourcePlanContactKey = zipperPlan.resourcePlanContactKey;
-      }
-    });
-    return highestResourcePlanContactKey;
-  }
-
   private onDocumentClick(e: Event): void {
     if (
       this.formGroup &&
       this.formGroup.valid &&
       !this.matches(
         e.target,
-        '#zipperPlanGrid tbody *, #productsGrid .k-grid-toolbar .k-button'
+        '#zipperPlanGrid tbody *, #zipperPlanGrid .k-grid-toolbar .k-button'
       )
     ) {
       this.saveCurrent();
