@@ -66,10 +66,10 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
       next: (data: IDropdownConfig[]) => {
         this.roles = data.find((x) => x.categoryName === 'Role')?.dropdownItems ?? [];
         this.disciplines = data.find((x) => x.categoryName === 'Discipline')?.dropdownItems ?? [];
-        this.zipperLevels = data.find((x) => x.categoryName === 'ZipperLevel')?.dropdownItems ?? [];
+        this.zipperLevels = data.find((x) => x.categoryName === 'Zipper level')?.dropdownItems ?? [];
         this.districts = data.find((x) => x.categoryName === 'District')?.dropdownItems ?? [];
 
-        this.zipperPlanService.read(this.roles);
+        this.zipperPlanService.read(data.find((x) => x.categoryName === 'Role')?.dropdownItems ?? []);
       },
     });
 
@@ -125,11 +125,11 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   //     if (args.originalEvent && args.originalEvent.keyCode === Keys.Escape) {
   //       return;
   //     }
-  //
+  
   //     Object.assign(dataItem, formGroup.value);
   //     this.zipperPlanService.update(dataItem);
   //   }
-  // }
+  //	}
 
   public createFormGroup = (dataItem: IZipperPlan) =>
     new FormGroup({
@@ -153,14 +153,17 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
     (el.matches || el.msMatchesSelector).call(el, selector);
 
   public onPernrTextboxBlur(): void {
-    const pernrInputValue = this.formGroup?.get('pernr')?.value as number;
+    const pernrInputValue = this.formGroup?.get('pernr')?.value;
 
     if (pernrInputValue) {
       this.zipperPlanService
         .getUserByPernr(pernrInputValue.toString())
         .subscribe({
           next: (user: IActiveDirectoryUserClientContract) => {
+						const zipperPlan = this.zipperPlanService.data.find((item: IZipperPlan) => item.pernr === pernrInputValue);
+
             this.setUserInfoValues(
+							zipperPlan !== undefined ? zipperPlan : {} as IZipperPlan,
               user.firstName + ' ' + user.lastName,
               user.businessPhone
                 ? user.businessPhone
@@ -171,7 +174,7 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
             );
           },
           error: (error: HttpErrorResponse) => {
-            this.setUserInfoValues();
+            // this.setUserInfoValues();
 
             switch (error.status) {
               case 400:
@@ -188,7 +191,7 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
         });
     }
 
-    this.setUserInfoValues();
+    // this.setUserInfoValues();
   }
 
   public onRoleValueChange(newValue: number): void {
@@ -202,11 +205,11 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
     if (roleDropdownConfig.display.toLowerCase().includes('external')) {
       this.isDisabled = false;
       this.formGroup?.get('pernr')?.setValue('TBD');
-      this.setUserInfoValues();
+      // this.setUserInfoValues();
     } else {
       this.isDisabled = true;
       this.formGroup?.get('pernr')?.setValue('');
-      this.setUserInfoValues();
+      // this.setUserInfoValues();
     }
   }
 
@@ -293,13 +296,17 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   }
 
   private setUserInfoValues(
-    nameValue: string = '',
+    dataItem: IZipperPlan = {} as IZipperPlan,
+		nameValue: string = '',
     phoneNumberValue: string = '',
     emailValue: string = ''
   ): void {
-    this.formGroup?.get('name')?.setValue(nameValue);
-    this.formGroup?.get('phoneNumber')?.setValue(phoneNumberValue);
-    this.formGroup?.get('email')?.setValue(emailValue);
+    dataItem.name = nameValue;
+    dataItem.phoneNumber = phoneNumberValue;
+    dataItem.email = emailValue;
+
+		Object.assign(dataItem, this.formGroup?.value);
+  	this.zipperPlanService.update(dataItem);
   }
 
   // #endregion

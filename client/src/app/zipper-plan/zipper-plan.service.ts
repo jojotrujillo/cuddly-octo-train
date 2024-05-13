@@ -7,7 +7,7 @@ import { IDropdownConfig } from 'src/interfaces/IDropdownConfig';
 import { IDropdownConfigItem } from 'src/interfaces/IDropdownConfigItem';
 
 const cloneData = (data: IZipperPlan[]): IZipperPlan[] =>
-  data.map((item) => Object.assign({}, item));
+  data.map((item: IZipperPlan) => Object.assign({}, item));
 
 const itemIndex = (item: IZipperPlan, data: IZipperPlan[]): number => {
   for (let idx = 0; idx < data.length; idx++) {
@@ -22,7 +22,8 @@ const itemIndex = (item: IZipperPlan, data: IZipperPlan[]): number => {
 @Injectable({ providedIn: 'root' })
 export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
   public data: IZipperPlan[] = [];
-  private counter: number;
+  
+	private counter: number;
   private originalData: IZipperPlan[] = [];
   private createdItems: IZipperPlan[] = [];
   private updatedItems: IZipperPlan[] = [];
@@ -40,11 +41,11 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
 
   public getLatestUserInformation(data: IZipperPlan[], roles: IDropdownConfigItem[]) {
     data.forEach((item: IZipperPlan) => {
-      const role = roles.find((role: IDropdownConfigItem) => item.roleDropdownConfigKey === role.value)!;
+      const userRole = roles.find((role: IDropdownConfigItem) => item.roleDropdownConfigKey === role.value)!;
 
       if (
         item.pernr &&
-        !role.display.toLowerCase().includes('external')
+        !userRole.display.toLowerCase().includes('external')
       ) {
         this.getUserByPernr(item.pernr).subscribe({
           next: (user: IActiveDirectoryUserClientContract) => {
@@ -69,7 +70,7 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
             item.phoneNumber = '';
             item.email = '';
           }
-        })
+        });
       }
     });
   }

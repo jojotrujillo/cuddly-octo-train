@@ -17,26 +17,36 @@ app.use(cors());
 // Get dropdown configs
 app.get('/api/DropdownConfigs', (req, res) => {
 	db.all('SELECT * FROM DropdownConfigs', (err, rows) => {
-		if (err) {
-			console.error(err.message);
-			res.status(500).send('Internal server error');
-		} else {
-			// JSON should look like this
-			// { "Roles": [{ "blah": "blah" }] }
-			const json = {};
+			if (err) {
+					// Handle error
+					console.error(err);
+					return res.status(500).json({ error: 'Internal server error' });
+			}
+
+			// Group rows by categoryName
+			const groupedConfigs = {};
 			rows.forEach(row => {
-				const key = row.Key;
-				const value = row.Value;
-				if (!json[key]) {
-					json[key] = [];
-				}
-				json[key].push(value);
+					if (!row.categoryName) {
+							groupedConfigs[row.dropdownDisplayType] = [];
+							return;
+					}
+
+					groupedConfigs[row.dropdownDisplayType].push({
+							display: row.itemDisplayName,
+							value: row.dropdownConfigKey
+					});
 			});
 
-			res.send(json);
-		}
+			// Map groupedConfigs to IDropdownConfig array
+			const dropdownConfigs = Object.keys(groupedConfigs).map(categoryName => ({
+					categoryName: categoryName,
+					dropdownItems: groupedConfigs[categoryName]
+			}));
+
+			res.json(dropdownConfigs);
 	});
 });
+
 
 // Get a single Activer Directory user by pernr
 app.get('/api/Users/GetUser/:pernr', (req, res) => {
@@ -56,7 +66,9 @@ app.get('/api/Users/GetUser/:pernr', (req, res) => {
 				newRow[camelCaseKey] = row[key];
 			});
 
-			res.send(newRow);
+			setTimeout((() => {
+				res.send(newRow);
+			}), 2000);
 		}
 	});
 });

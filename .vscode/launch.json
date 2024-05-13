@@ -17,6 +17,15 @@
       "request": "launch",
       "preLaunchTask": "npm: test",
       "url": "http://localhost:9876/debug.html"
-    }
+    },
+		// node index.js
+		{
+			"name": "Launch Program",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/server/index.js",
+			"cwd": "${workspaceFolder}/server",
+			"skipFiles": ["<node_internals>/**"]
+		}
   ]
 }
