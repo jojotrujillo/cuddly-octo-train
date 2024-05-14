@@ -12,6 +12,7 @@ import { ZipperPlanService } from './zipper-plan/zipper-plan.service';
 import { InputsModule } from '@progress/kendo-angular-inputs';
 import { LayoutModule } from '@progress/kendo-angular-layout';
 import { ButtonsModule } from '@progress/kendo-angular-buttons';
+import { DialogsModule } from "@progress/kendo-angular-dialog";
 
 @NgModule({
   declarations: [AppComponent, ZipperPlanComponent],
@@ -26,8 +27,9 @@ import { ButtonsModule } from '@progress/kendo-angular-buttons';
     LayoutModule,
     DropDownsModule,
     ReactiveFormsModule,
+    DialogsModule,
   ],
   providers: [ZipperPlanService],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

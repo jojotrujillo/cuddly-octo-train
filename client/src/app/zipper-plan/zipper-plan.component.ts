@@ -1,7 +1,9 @@
 import {
   Component,
+  EventEmitter,
   OnDestroy,
   OnInit,
+  Output,
   Renderer2,
   ViewChild,
   ViewEncapsulation,
@@ -16,7 +18,7 @@ import {
   GridComponent,
   RemoveEvent,
 } from '@progress/kendo-angular-grid';
-import { Subscription } from 'rxjs';
+import { Subscription, zip } from 'rxjs';
 import { IActiveDirectoryUserClientContract } from 'src/interfaces/IActiveDirectoryUserClientContract';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -27,6 +29,7 @@ import { HttpErrorResponse } from '@angular/common/http';
   encapsulation: ViewEncapsulation.None,
 })
 export class ZipperPlanComponent implements OnInit, OnDestroy {
+  @Output() close: EventEmitter<{}> = new EventEmitter();
   @ViewChild(GridComponent)
   private grid: GridComponent; // Note: This has to be instantiated before formGroup or else formGroup will take on GridComponent type
 
@@ -78,7 +81,7 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   // #endregion
 
   public addHandler(): void {
-    // this.addZipperPlanRow();
+    this.addZipperPlanRow();
 
     this.closeEditor();
 
@@ -95,7 +98,7 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
     });
     this.isNew = true;
 
-    // this.addZipperPlanRow();
+    this.addZipperPlanRow();
     this.grid.addRow(this.formGroup);
   }
 
@@ -125,11 +128,23 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   //     if (args.originalEvent && args.originalEvent.keyCode === Keys.Escape) {
   //       return;
   //     }
-  
+
   //     Object.assign(dataItem, formGroup.value);
   //     this.zipperPlanService.update(dataItem);
   //   }
   //	}
+
+  public closeDialog(): void {
+    if (this.zipperPlanService.hasChanges()) {
+      if (confirm('Are you sure you want to close without saving?')) {
+        console.log('No changes detected');
+      }
+    } else {
+      console.log('No changes detected');
+    }
+
+    this.close.emit();
+  }
 
   public createFormGroup = (dataItem: IZipperPlan) =>
     new FormGroup({
@@ -154,16 +169,16 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
 
   public onPernrTextboxBlur(): void {
     const pernrInputValue = this.formGroup?.get('pernr')?.value;
+    const resourcePlanContactKeyValue = this.formGroup?.get('resourcePlanContactKey')?.value;
+    const zipperPlan = this.zipperPlanService.data.find((item: IZipperPlan) => item.resourcePlanContactKey === resourcePlanContactKeyValue);
 
     if (pernrInputValue) {
       this.zipperPlanService
         .getUserByPernr(pernrInputValue.toString())
         .subscribe({
           next: (user: IActiveDirectoryUserClientContract) => {
-						const zipperPlan = this.zipperPlanService.data.find((item: IZipperPlan) => item.pernr === pernrInputValue);
-
             this.setUserInfoValues(
-							zipperPlan !== undefined ? zipperPlan : {} as IZipperPlan,
+              zipperPlan !== undefined ? zipperPlan : {},
               user.firstName + ' ' + user.lastName,
               user.businessPhone
                 ? user.businessPhone
@@ -174,7 +189,7 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
             );
           },
           error: (error: HttpErrorResponse) => {
-            // this.setUserInfoValues();
+            this.setUserInfoValues(zipperPlan !== undefined ? zipperPlan : {});
 
             switch (error.status) {
               case 400:
@@ -191,7 +206,7 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
         });
     }
 
-    // this.setUserInfoValues();
+    this.setUserInfoValues(zipperPlan !== undefined ? zipperPlan : {});
   }
 
   public onRoleValueChange(newValue: number): void {
@@ -215,17 +230,18 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
 
   public removeHandler(args: RemoveEvent): void {
     this.zipperPlanService.remove(args.dataItem);
-
-    args.sender.cancelCell();
   }
 
   public saveChanges(): void {
-    if (this.grid !== undefined) {
-      this.grid.closeCell();
-      this.grid.cancelCell();
+    const validationError = this.validateForm();
+
+    if (validationError === undefined) {
+      this.zipperPlanService.saveChanges();
+      this.closeDialog();
+    } else {
+      alert(validationError);
     }
 
-    this.zipperPlanService.saveChanges();
   }
 
   // #region Display text parsers for dropdowns
@@ -296,8 +312,8 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
   }
 
   private setUserInfoValues(
-    dataItem: IZipperPlan = {} as IZipperPlan,
-		nameValue: string = '',
+    dataItem: any,
+    nameValue: string = '',
     phoneNumberValue: string = '',
     emailValue: string = ''
   ): void {
@@ -305,8 +321,34 @@ export class ZipperPlanComponent implements OnInit, OnDestroy {
     dataItem.phoneNumber = phoneNumberValue;
     dataItem.email = emailValue;
 
-		Object.assign(dataItem, this.formGroup?.value);
-  	this.zipperPlanService.update(dataItem);
+    if (this.formGroup) {
+      this.formGroup.patchValue({
+        name: nameValue,
+        phoneNumber: phoneNumberValue,
+        email: emailValue,
+      });
+    }
+  }
+
+  private validateForm(): string | undefined {
+    let validationError: string | undefined = undefined;
+
+    this.zipperPlanService.data.forEach((item: IZipperPlan) => {
+      if (item.roleDropdownConfigKey === 0
+        || item.disciplineDropdownConfigKey === 0
+        || item.zipperLevelDropdownConfigKey === 0
+        || item.districtKey === 0
+        || item.pernr === undefined
+        || item.name === '') {
+        validationError = 'Role, Discipline, Zipper Level, District, PERNR, and Name cannot be empty.';
+
+        return validationError;
+      }
+
+      return validationError;
+    });
+
+    return validationError;
   }
 
   // #endregion

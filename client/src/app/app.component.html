@@ -1,3 +1,4 @@
-<a class="button" routerLink="/contacts" routerLinkActive="activebutton">Zipper Plan</a>
+<button (click)="showZipperPlanDialogHandler()">Zipper Plan</button>
 
-<router-outlet></router-outlet>
+<!-- <router-outlet></router-outlet> -->
+<app-zipper-plan *ngIf="showZipperPlanDialog" (close)="showZipperPlanDialog = false"></app-zipper-plan>

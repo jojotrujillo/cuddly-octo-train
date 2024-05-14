@@ -22,8 +22,8 @@ const itemIndex = (item: IZipperPlan, data: IZipperPlan[]): number => {
 @Injectable({ providedIn: 'root' })
 export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
   public data: IZipperPlan[] = [];
-  
-	private counter: number;
+
+  private counter: number;
   private originalData: IZipperPlan[] = [];
   private createdItems: IZipperPlan[] = [];
   private updatedItems: IZipperPlan[] = [];
@@ -87,9 +87,17 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
 
   public create(item: IZipperPlan): void {
     this.createdItems.push(item);
-    this.data.unshift(item);
+    // this.data.unshift(item);
 
     super.next(this.data);
+  }
+
+  public hasChanges(): boolean {
+    return Boolean(
+      this.deletedItems.length ||
+      this.updatedItems.length ||
+      this.createdItems.length
+    );
   }
 
   public read(roles: IDropdownConfigItem[]): void {
@@ -201,14 +209,6 @@ export class ZipperPlanService extends BehaviorSubject<IZipperPlan[]> {
   private getZipperPlans(resourcePlanKey: number): Observable<IZipperPlan[]> {
     return this.http.get<IZipperPlan[]>(
       `http://localhost:3000/api/ResourcePlans/${resourcePlanKey}/Contacts`
-    );
-  }
-
-  private hasChanges(): boolean {
-    return Boolean(
-      this.deletedItems.length ||
-      this.updatedItems.length ||
-      this.createdItems.length
     );
   }
 

@@ -17,33 +17,33 @@ app.use(cors());
 // Get dropdown configs
 app.get('/api/DropdownConfigs', (req, res) => {
 	db.all('SELECT * FROM DropdownConfigs', (err, rows) => {
-			if (err) {
-					// Handle error
-					console.error(err);
-					return res.status(500).json({ error: 'Internal server error' });
+		if (err) {
+			// Handle error
+			console.error(err);
+			return res.status(500).json({ error: 'Internal server error' });
+		}
+
+		// Group rows by categoryName
+		const groupedConfigs = {};
+		rows.forEach(row => {
+			if (!row.categoryName) {
+				groupedConfigs[row.dropdownDisplayType] = [];
+				return;
 			}
 
-			// Group rows by categoryName
-			const groupedConfigs = {};
-			rows.forEach(row => {
-					if (!row.categoryName) {
-							groupedConfigs[row.dropdownDisplayType] = [];
-							return;
-					}
-
-					groupedConfigs[row.dropdownDisplayType].push({
-							display: row.itemDisplayName,
-							value: row.dropdownConfigKey
-					});
+			groupedConfigs[row.dropdownDisplayType].push({
+				display: row.itemDisplayName,
+				value: row.dropdownConfigKey
 			});
+		});
 
-			// Map groupedConfigs to IDropdownConfig array
-			const dropdownConfigs = Object.keys(groupedConfigs).map(categoryName => ({
-					categoryName: categoryName,
-					dropdownItems: groupedConfigs[categoryName]
-			}));
+		// Map groupedConfigs to IDropdownConfig array
+		const dropdownConfigs = Object.keys(groupedConfigs).map(categoryName => ({
+			categoryName: categoryName,
+			dropdownItems: groupedConfigs[categoryName]
+		}));
 
-			res.json(dropdownConfigs);
+		res.json(dropdownConfigs);
 	});
 });
 
